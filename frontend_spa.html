@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Absensi Divisi Floor</title>
+  <!-- Load Tailwind CSS dari CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Load Font Inter dari Google Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    body { font-family: 'Inter', sans-serif; background-color: #f3f4f6; }
+    .shift-active { border-color: #3b82f6; background-color: #eff6ff; color: #1d4ed8; }
+    #toast { transition: opacity 0.3s ease-in-out; }
+  </style>
+</head>
+<body class="text-gray-800">
+
+  <!-- Navbar -->
+  <nav class="bg-blue-600 text-white p-4 shadow-md sticky top-0 z-50">
+    <div class="max-w-md mx-auto flex justify-between items-center">
+      <h1 class="text-xl font-bold flex items-center gap-2">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+        Absensi Floor
+      </h1>
+      <button id="btnLogout" class="hidden text-sm bg-blue-700 px-3 py-1 rounded hover:bg-blue-800 shadow-sm transition" onclick="logout()">Ganti User</button>
+    </div>
+  </nav>
+
+  <!-- Toast Notification -->
+  <div id="toast" class="fixed top-20 left-1/2 transform -translate-x-1/2 w-11/12 max-w-md z-50 hidden">
+    <div id="toastMsg" class="p-4 rounded-lg shadow-lg text-white font-medium text-center"></div>
+  </div>
+
+  <!-- Main Container -->
+  <main class="max-w-md mx-auto p-4 min-h-[80vh] flex flex-col">
+    
+    <!-- PAGE 1: LOGIN -->
+    <div id="pageLogin" class="flex-1 flex flex-col justify-center">
+      <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+        <h2 class="text-2xl font-bold text-center mb-2">Selamat Datang</h2>
+        <p class="text-center text-gray-500 mb-6 text-sm">Silakan pilih nama Anda untuk absen</p>
+        
+        <!-- Form Staff -->
+        <div id="formStaff" class="space-y-4">
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Pilih Nama Anda</label>
+            <select id="staffName" class="w-full p-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white">
+              <option value="">-- Pilih Nama --</option>
+            </select>
+          </div>
+          <button onclick="loginStaff()" class="w-full bg-blue-600 text-white font-bold py-3.5 rounded-xl hover:bg-blue-700 transition active:scale-95 flex justify-center items-center gap-2 mt-4">
+            Lanjut ke Absen
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10.293 3.293a1 1 0 011.414 0l6 6a1 1 0 010 1.414l-6 6a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-4.293-4.293a1 1 0 010-1.414z" clip-rule="evenodd" /></svg>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- PAGE 2: ABSENSI -->
+    <div id="pageAbsen" class="hidden flex-1 flex flex-col gap-4">
+      
+      <!-- User Info -->
+      <div class="bg-white p-4 rounded-2xl shadow-sm border border-gray-100 flex flex-col items-center justify-center">
+        <p class="text-sm text-gray-500">Halo,</p>
+        <h2 id="displayUserName" class="text-2xl font-bold text-gray-900">Nama User</h2>
+        <span id="displayUserRole" class="mt-1 px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-xs font-semibold uppercase tracking-wide">Role</span>
+      </div>
+
+      <!-- Shift Selection -->
+      <div>
+        <p class="text-sm font-medium text-gray-700 mb-2">Pilih Shift Kerja Anda</p>
+        <div class="grid grid-cols-3 gap-2">
+          <button onclick="selectShift('Morning', this)" class="shift-btn border border-gray-200 bg-white p-2 rounded-xl text-center transition">
+            <div class="text-xs text-gray-500">08:00 - 17:00</div>
+            <div class="font-bold">Morning</div>
+          </button>
+          <button onclick="selectShift('Middle', this)" class="shift-btn border border-gray-200 bg-white p-2 rounded-xl text-center transition">
+            <div class="text-xs text-gray-500">11:00 - 20:00</div>
+            <div class="font-bold">Middle</div>
+          </button>
+          <button onclick="selectShift('Evening', this)" class="shift-btn border border-gray-200 bg-white p-2 rounded-xl text-center transition">
+            <div class="text-xs text-gray-500">12:00 - 22:00</div>
+            <div class="font-bold">Evening</div>
+          </button>
+        </div>
+      </div>
+
+      <!-- Camera Area -->
+      <div class="bg-white p-4 rounded-2xl border-2 border-dashed border-gray-300 flex flex-col items-center justify-center min-h-[250px] relative">
+        <div id="cameraSetupBox" class="w-full text-center">
+          <p class="text-sm text-gray-500 mb-4">Silakan upload foto atau ambil selfie.</p>
+          <label for="cameraFallback" class="cursor-pointer bg-blue-600 text-white font-bold py-3 px-6 rounded-xl hover:bg-blue-700 transition inline-flex items-center gap-2 w-full justify-center">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
+            Ambil Foto / Galeri
+          </label>
+          <input type="file" id="cameraFallback" accept="image/*" class="hidden" onchange="handleFallbackPhoto(event)">
+        </div>
+        
+        <img id="photoPreview" class="hidden w-full h-auto rounded-lg mt-4 object-cover max-h-[300px]">
+      </div>
+
+      <!-- Action Buttons -->
+      <div class="grid grid-cols-2 gap-3 mt-auto">
+        <button onclick="submitAbsensi('masuk')" class="bg-green-600 text-white font-bold py-4 rounded-xl hover:bg-green-700 active:scale-95 transition flex flex-col items-center gap-1">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1" /></svg>
+          Absen Masuk
+        </button>
+        <button onclick="submitAbsensi('pulang')" class="bg-red-500 text-white font-bold py-4 rounded-xl hover:bg-red-600 active:scale-95 transition flex flex-col items-center gap-1">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" /></svg>
+          Absen Pulang
+        </button>
+      </div>
+    </div>
+
+  </main>
+
+  <script>
+    // Data Karyawan (Termasuk Captain)
+    const staffList = [
+      { name: "Kusmiyati", role: "Captain Floor" },
+      { name: "Reikhan", role: "Server" },
+      { name: "Fitri Fauziah", role: "Server" },
+      { name: "Fauzi Ferdinal", role: "Server" },
+      { name: "Deden Ahmad", role: "Server" },
+      { name: "Rizki Anugrah", role: "HK/BB" },
+      { name: "Muhammad Rizki", role: "HK/BB" },
+      { name: "Ahmad Fajar", role: "HK/BB" }
+    ];
+
+    // State Aplikasi
+    let currentUser = null;
+    let currentShift = null;
+    let photoData = null; 
+
+    // Render daftar nama ke dropdown saat halaman dimuat
+    window.onload = () => {
+      const select = document.getElementById('staffName');
+      staffList.forEach(staff => {
+        const option = document.createElement('option');
+        option.value = JSON.stringify(staff);
+        option.text = `${staff.name} - ${staff.role}`;
+        select.appendChild(option);
+      });
+    };
+
+    function showPage(pageId) {
+      document.getElementById('pageLogin').classList.add('hidden');
+      document.getElementById('pageAbsen').classList.add('hidden');
+      document.getElementById(pageId).classList.remove('hidden');
+      
+      const btnLogout = document.getElementById('btnLogout');
+      if (pageId === 'pageLogin') {
+        btnLogout.classList.add('hidden');
+        currentUser = null; // Reset user jika balik ke halaman awal
+      } else {
+        btnLogout.classList.remove('hidden');
+      }
+    }
+
+    function loginStaff() {
+      const val = document.getElementById('staffName').value;
+      if (!val) {
+        showToast("Pilih nama terlebih dahulu!", "error");
+        return;
+      }
+      currentUser = JSON.parse(val);
+      setupAbsenPage();
+    }
+
+    function logout() {
+      // Reset semua data saat tombol Ganti User diklik
+      currentShift = null;
+      photoData = null;
+      document.getElementById('photoPreview').src = '';
+      document.getElementById('photoPreview').classList.add('hidden');
+      
+      if(document.getElementById('cameraFallback')) {
+         document.getElementById('cameraFallback').value = '';
+      }
+      
+      document.querySelectorAll('.shift-btn').forEach(b => {
+        b.classList.remove('shift-active');
+        b.classList.add('border-gray-200');
+      });
+      
+      document.getElementById('staffName').value = '';
+      showPage('pageLogin');
+    }
+
+    function setupAbsenPage() {
+      document.getElementById('displayUserName').innerText = currentUser.name;
+      document.getElementById('displayUserRole').innerText = currentUser.role;
+      showPage('pageAbsen');
+    }
+
+    function selectShift(shiftName, btnElement) {
+      currentShift = shiftName;
+      // Hapus kelas aktif dari semua tombol
+      document.querySelectorAll('.shift-btn').forEach(b => {
+        b.classList.remove('shift-active');
+        b.classList.add('border-gray-200');
+      });
+      // Berikan kelas aktif ke tombol yang dipilih
+      btnElement.classList.remove('border-gray-200');
+      btnElement.classList.add('shift-active');
+    }
+
+    function handleFallbackPhoto(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        photoData = e.target.result; // Data base64 foto
+        const preview = document.getElementById('photoPreview');
+        preview.src = photoData;
+        preview.classList.remove('hidden');
+      }
+      reader.readAsDataURL(file);
+    }
+
+    function submitAbsensi(tipe) {
+      if (!currentUser) return;
+      if (!currentShift) {
+        showToast("Silakan pilih Shift kerja terlebih dahulu!", "error");
+        return;
+      }
+      if (!photoData) {
+        showToast("Wajib mengambil/upload foto sebelum absen!", "error");
+        return;
+      }
+
+      showToast("Sedang memproses absensi, mohon tunggu sebentar...", "info");
+      
+      const payload = {
+        name: currentUser.name,
+        role: currentUser.role,
+        shift: currentShift,
+        type: tipe,
+        photoData: photoData
+      };
+
+      // Memanggil fungsi submitAbsen di Code.gs
+      google.script.run
+        .withSuccessHandler(function(response) {
+          if (response.success) {
+            showToast(response.message, "success");
+            // Reset foto setelah sukses absen
+            photoData = null;
+            document.getElementById('photoPreview').src = '';
+            document.getElementById('photoPreview').classList.add('hidden');
+            if(document.getElementById('cameraFallback')) {
+               document.getElementById('cameraFallback').value = '';
+            }
+          } else {
+            showToast(response.message, "error");
+          }
+        })
+        .withFailureHandler(function(error) {
+          showToast("Terjadi kesalahan jaringan atau script gagal dieksekusi.", "error");
+        })
+        .submitAbsen(payload);
+    }
+
+    function showToast(message, type) {
+      const toast = document.getElementById('toast');
+      const msg = document.getElementById('toastMsg');
+      
+      msg.innerText = message;
+      msg.className = 'p-4 rounded-lg shadow-lg text-white font-medium text-center text-sm';
+      
+      if (type === 'success') msg.classList.add('bg-green-600');
+      else if (type === 'error') msg.classList.add('bg-red-600');
+      else msg.classList.add('bg-blue-600'); // info
+      
+      toast.classList.remove('hidden');
+      
+      // Hilangkan toast setelah 4 detik
+      setTimeout(() => {
+        toast.classList.add('hidden');
+      }, 4000);
+    }
+  </script>
+</body>
+</html>
